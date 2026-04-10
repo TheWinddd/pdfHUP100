@@ -139,18 +139,17 @@ def run_download(url: str, out_dir: str, q: queue.Queue):
         q.put(("state", kwargs))
 
     try:
-        # ── Chrome setup ──────────────────────────────────────────────────────
-        send("info", "Kiểm tra Chrome…")
-        os.system("apt-get update -qq && apt-get install -y google-chrome-stable -qq 2>&1 | tail -1")
+        # ── Chromium setup ─────────────────────────────────────────────────────
+        send("info", "Kiểm tra Chromium…")
 
         chrome_binary = None
-        for p in ['/usr/bin/google-chrome-stable', '/usr/bin/google-chrome']:
+        for p in ['/usr/bin/chromium', '/usr/bin/chromium-browser']:
             if os.path.exists(p):
                 chrome_binary = p
                 break
         if not chrome_binary:
             r = subprocess.run(
-                "which google-chrome-stable || which google-chrome",
+                "which chromium || which chromium-browser",
                 shell=True, capture_output=True, text=True)
             chrome_binary = r.stdout.strip() or None
 
@@ -160,45 +159,24 @@ def run_download(url: str, out_dir: str, q: queue.Queue):
             ver_str = subprocess.run(
                 [chrome_binary, "--version"], capture_output=True, text=True
             ).stdout.strip()
-            send("ok", f"Chrome: {ver_str}")
-            major = int(ver_str.split()[-1].split(".")[0])
+            send("ok", f"Chromium: {ver_str}")
 
-            # ── ChromeDriver ──────────────────────────────────────────────────
-            send("info", f"Tìm ChromeDriver (Chrome {major})…")
-            r = requests.get(
-                "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json",
-                timeout=30
-            )
-            versions = r.json()["versions"]
-            matched = [v for v in versions if v["version"].startswith(str(major) + ".")]
-            info = (matched or versions)[-1]
-            send("info", f"ChromeDriver: {info['version']}")
+            # ── ChromeDriver (installed via packages.txt) ─────────────────────
+            for p in ['/usr/bin/chromedriver', '/usr/lib/chromium/chromedriver']:
+                if os.path.exists(p):
+                    chromedriver_path = p
+                    break
+            if not chromedriver_path:
+                r = subprocess.run("which chromedriver", shell=True,
+                                   capture_output=True, text=True)
+                chromedriver_path = r.stdout.strip() or None
 
-            downloads = info.get("downloads", {}).get("chromedriver", [])
-            dl_url = next((d["url"] for d in downloads if d["platform"] == "linux64"), None)
-            if not dl_url:
-                raise RuntimeError("Không tìm được URL ChromeDriver linux64")
-
-            send("info", "Đang tải ChromeDriver…")
-            r2 = requests.get(dl_url, timeout=60)
-            dest = "/usr/local/bin/chromedriver"
-            with zipfile.ZipFile(io.BytesIO(r2.content)) as z:
-                cd_name = next(
-                    (n for n in z.namelist() if n.endswith("/chromedriver") or n == "chromedriver"),
-                    None
-                )
-                if not cd_name:
-                    raise RuntimeError(f"Không thấy chromedriver trong zip: {z.namelist()}")
-                raw = z.read(cd_name)
-                if raw[:4] != b'\x7fELF':
-                    raise RuntimeError("File extract không phải ELF binary!")
-                with open(dest, "wb") as f:
-                    f.write(raw)
-            os.chmod(dest, 0o755)
-            chromedriver_path = dest
-            send("ok", "ChromeDriver sẵn sàng!")
+            if chromedriver_path:
+                send("ok", f"ChromeDriver: {chromedriver_path}")
+            else:
+                send("info", "ChromeDriver không tìm thấy, dùng Selenium Manager…")
         else:
-            send("info", "Không thấy Chrome hệ thống, thử Selenium Manager…")
+            send("info", "Không thấy Chromium hệ thống, thử Selenium Manager…")
 
         # ── WebDriver ─────────────────────────────────────────────────────────
         from selenium import webdriver
