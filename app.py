@@ -2,7 +2,7 @@ import streamlit as st
 import os, time, subprocess, sys, io, zipfile, requests, threading, shutil, queue
 
 # ── Page config ───────────────────────────────────────────────────────────────
-st.set_page_config(page_title="eLib Downloader", page_icon="📚", layout="centered")
+st.set_page_config(page_title="VQB trường Dờ", page_icon="📚", layout="centered")
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -348,12 +348,12 @@ st.markdown("""
 # ── Form ──────────────────────────────────────────────────────────────────────
 
 doc_url = st.text_input(
-    "URL Tài Liệu - nhập xong ấn enter là được",
+    "URL Tài Liệu",
     placeholder="https://elib.hup.edu.vn/opacdigital/ViewPDF.aspx?...",
     disabled=st.session_state.running,
 )
 pdf_name = st.text_input(
-    "Đặt tên file PDF (tuỳ chọn)",
+    "Tên file PDF (tuỳ chọn)",
     value=st.session_state.pdf_name,
     disabled=st.session_state.running,
 )
