@@ -326,12 +326,12 @@ st.markdown("""
 # ── Form ──────────────────────────────────────────────────────────────────────
 
 doc_url = st.text_input(
-    "URL Tài Liệu",
+    "URL/Link Tài Liệu - sau khi nhập ấn enter",
     placeholder="https://elib.hup.edu.vn/opacdigital/ViewPDF.aspx?...",
     disabled=st.session_state.running,
 )
 pdf_name = st.text_input(
-    "Tên file PDF (tuỳ chọn)",
+    "Đặt tên file PDF (tuỳ chọn)",
     value=st.session_state.pdf_name,
     disabled=st.session_state.running,
 )
